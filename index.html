@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipo UI/UX de baja fidelidad</title>
+<style>
+:root{--ink:#222;--mut:#666;--line:#b5b5b0;--soft:#efefec;--bg:#e4e4e0;--panel:#fff;
+  --pri:#1f4e8c;--ok:#2e7d32;--warn:#a65f00;--bad:#c62828;--info:#1f4e8c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.35 Arial,"Liberation Sans",Helvetica,sans-serif;color:var(--ink);background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--pri)}
+.proto-bar{background:#222;color:#fff;font-size:12px;padding:5px 12px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.proto-bar a{color:#cfe3ff;cursor:pointer;margin-left:10px;text-decoration:underline}
+body.shot .proto-bar{display:none}
+#app{min-height:calc(100% - 28px)}
+body.shot #app{min-height:0}
+body.shot .shell-body{min-height:0}
+body.shot .center{min-height:0}
+body.shot .demo{display:none}
+/* ---------- piezas comunes */
+.btn{border:1px solid #777;background:#fff;padding:6px 12px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#f3f3f0}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.pri:hover{background:#18407a}
+.btn.bad{border-color:var(--bad);color:var(--bad)}
+.btn.sm{padding:3px 9px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.badge{display:inline-block;padding:1px 9px;border-radius:11px;border:1px solid;font-size:12px;white-space:nowrap;background:#fff}
+.b-gris{color:#555;border-color:#888}
+.b-ok{color:var(--ok);border-color:var(--ok)}
+.b-bad{color:var(--bad);border-color:var(--bad)}
+.b-info{color:var(--info);border-color:var(--info)}
+.b-warn{color:var(--warn);border-color:var(--warn)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.card h3,.card h4{margin:0 0 8px;font-size:14px}
+h2.pt{margin:0 0 10px;font-size:19px}
+.row{display:flex;gap:12px}
+.col{flex:1;min-width:0}
+.mut{color:var(--mut)}
+.small{font-size:12px}
+label.f{display:block;margin:0 0 9px}
+label.f span{display:block;font-size:12px;color:var(--mut);margin-bottom:2px}
+.inp{width:100%;border:1px solid #888;border-radius:4px;padding:6px 8px;background:#fff}
+.inp[disabled]{background:#ecece8;color:#666}
+.err{border-left:4px solid var(--bad);background:#fdeaea;color:#7a1414;padding:7px 10px;margin:8px 0;border-radius:3px;font-size:13px}
+.okm{border-left:4px solid var(--ok);background:#e9f5ea;color:#1c4d1f;padding:7px 10px;margin:8px 0;border-radius:3px;font-size:13px}
+.wrn{border-left:4px solid var(--warn);background:#fff3df;color:#5c3600;padding:7px 10px;margin:8px 0;border-radius:3px;font-size:13px}
+table.t{width:100%;border-collapse:collapse;background:#fff}
+table.t th,table.t td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:middle}
+table.t th{background:var(--soft);font-weight:700;font-size:13px}
+.logo{width:92px;height:28px;border:1.5px dashed #777;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;background:#fff}
+/* ---------- login */
+.center{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 28px);padding:16px}
+body.shot .center{min-height:100vh}
+.loginbox{width:340px}
+.loginbox .logo{margin:0 auto 12px}
+.demo{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px;font-size:12px;color:var(--mut)}
+.demo .btn{margin:3px 4px 0 0}
+/* ---------- shell administrativo */
+.shell-top{display:flex;align-items:center;gap:14px;background:#fff;border-bottom:1px solid var(--line);padding:7px 14px}
+.shell-top .sp{flex:1}
+.shell-top .venue{border:1px solid #888;border-radius:4px;padding:4px 10px;background:#fafaf8;font-size:13px}
+.shell-body{display:flex;min-height:calc(100vh - 28px - 43px - 31px)}
+.side{width:150px;background:#f6f6f3;border-right:1px solid var(--line);padding:10px 0;flex:none}
+.side a{display:block;padding:8px 14px;color:var(--ink);text-decoration:none;cursor:pointer;border-left:4px solid transparent}
+.side a.on{background:#fff;border-left-color:var(--pri);font-weight:700}
+.side a:hover{background:#fff}
+.main{flex:1;padding:14px 16px;min-width:0}
+.legal{background:#fff7e0;border-top:1px solid #e0cf99;color:#5c4a00;font-size:12px;padding:6px 14px}
+/* ---------- agenda */
+.cal{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff}
+.cal th{background:var(--soft);border:1px solid var(--line);padding:4px;font-size:12px}
+.cal td{border:1px solid var(--line);height:62px;vertical-align:top;padding:2px 4px;font-size:12px}
+.cal td.o{background:#f5f5f2;color:#999}
+.chip{display:block;margin-top:3px;padding:1px 5px;border-radius:3px;border:1px solid;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;background:#fff}
+.chip.Borrador{border-color:#777;color:#444;border-style:dashed}
+.chip.Confirmado{border-color:var(--ok);color:var(--ok);background:#eaf5eb}
+.chip.Cancelado{border-color:#999;color:#888;text-decoration:line-through}
+.chip.Realizado{border-color:var(--info);color:var(--info);background:#eaf0f8}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:20}
+.modal input[type=date],.modal input[type=time]{font-size:13px;padding:6px}
+.modal{background:#fff;border:1px solid #666;border-radius:6px;padding:16px;width:420px;max-width:92vw;max-height:92vh;overflow:auto}
+.modal h3{margin:0 0 10px}
+.check{display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+.check i{font-style:normal;font-weight:700;width:18px;flex:none}
+.ok-i{color:var(--ok)} .no-i{color:var(--bad)}
+.chipx{display:inline-block;border:1px solid #888;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0;font-size:12px;background:#fff}
+/* ---------- editor */
+.ed{display:flex;gap:10px;align-items:flex-start}
+.ed .pal{width:138px;flex:none;padding:10px 8px}
+.ed .cv{flex:1;min-width:0}
+.ed .prop{width:200px;flex:none}
+.pal .it{border:1px solid #888;border-radius:4px;padding:5px 7px;margin:0 0 6px;background:#fff;cursor:grab;user-select:none;touch-action:none}
+.pal .it b{display:block;font-size:12.5px;line-height:1.25}
+.pal .it span{font-size:11.5px;color:var(--mut)}
+.pal .sw{display:inline-block;border:1.5px solid #555;background:#e6e6e6;vertical-align:middle;margin-right:6px}
+.tools{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.tools .sp{flex:1}
+#cvwrap{border:1px solid #666;background:#fff;line-height:0;display:inline-block;max-width:100%}
+canvas{touch-action:none;display:block;max-width:100%}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:6px;color:#333;line-height:1.3}
+.legend .k{display:inline-block;width:14px;height:10px;border:1px solid #444;margin-right:4px;vertical-align:-1px}
+.rule{display:flex;gap:6px;align-items:flex-start;font-size:12px;margin:3px 0}
+.rule i{font-style:normal;font-weight:700;width:14px;flex:none}
+.kpi{display:flex;justify-content:space-between;font-size:12px;margin:2px 0}
+.kpi.big{font-size:14px;font-weight:700;border-top:1px solid var(--line);padding-top:5px;margin-top:5px}
+/* ---------- portal banda */
+.bshell{max-width:760px;margin:0 auto;padding:0 0 12px}
+.bcard{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:0 0 9px}
+.bcard .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin:8px 0 12px}
+.tabs a{padding:7px 14px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs a.on{border-bottom-color:var(--pri);font-weight:700}
+.mob-only{display:none}
+.nb{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:9px;background:#444;color:#fff;font-size:11px;text-align:center;font-weight:400}
+.map{position:relative;height:96px;border:1px solid #888;background:repeating-linear-gradient(0deg,#f1f1ee 0 15px,#e4e4e0 15px 16px),repeating-linear-gradient(90deg,transparent 0 15px,#e4e4e0 15px 16px);border-radius:4px}
+.map b{position:absolute;left:46%;top:22%;font-size:22px;line-height:1}
+.map span{position:absolute;right:6px;bottom:3px;font-size:11px;color:#555;background:#fff;padding:0 4px;border:1px solid #bbb}
+.bcat{display:flex;justify-content:space-between;gap:10px;align-items:center}
+@media (max-width:700px){
+  body{font-size:15px}
+  .side{display:none}
+  .mob-only{display:block}
+  .shell-body{flex-direction:column}
+  .row{flex-direction:column}
+  .shell-top .venue{display:none}
+  .main{padding:10px 10px}
+  .ed{flex-direction:column}
+  .ed .pal,.ed .prop{width:100%}
+  .cal td{height:46px}
+  .tabs a{padding:7px 9px}
+  .btn{padding:9px 13px}
+}
+</style>
+</head>
+<body>
+<div class="proto-bar" id="pbar">
+  <span><b>Prototipo de baja fidelidad</b> · datos ficticios · no es el sistema final</span>
+  <span>Atajos: <a data-go="login">Inicio de sesión</a><a data-go="activar">Activar cuenta</a><a data-go="agenda">Administrador</a><a data-go="banda-agenda">Banda</a><a data-go="bares">Mis bares</a><a data-go="solicitudes">Solicitudes</a><a data-go="banda-bares">Buscar bares</a><a data-go="editor/valido">Editor</a></span>
+</div>
+<div id="app"></div>
+<div id="modal-root"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Datos ficticios
+   ===================================================================== */
+const D = {
+  recinto:{nombre:'Bar Nocturno Centro', W:20, H:12, celda:0.5, pasilloMin:1.2, d:1.4, c:200},
+  catalogo:[
+    {id:'mesa4', nombre:'Mesa redonda', pers:4, w:1.0, h:1.0, disp:30},
+    {id:'mesa6', nombre:'Mesa rectangular', pers:6, w:1.8, h:0.9, disp:10},
+    {id:'barra', nombre:'Barra modular', pers:0, w:3.0, h:0.7, disp:6},
+    {id:'esc',   nombre:'Escenario modular', pers:0, w:5.0, h:3.0, disp:1}
+  ],
+  salidas:[
+    {id:'S1', x:2.0,  y:11.6, w:1.2, h:0.4, despeje:{x:2.0,  y:10.6, w:1.2, h:1.0}, ancho:1.2},
+    {id:'S2', x:19.6, y:6.0,  w:0.4, h:1.2, despeje:{x:18.6, y:6.0,  w:1.0, h:1.2}, ancho:1.2}
+  ],
+  prohibidas:[
+    {id:'Pasillo 1', x:2.0, y:3.6, w:1.2,  h:7.0},
+    {id:'Pasillo 2', x:3.2, y:6.0, w:15.4, h:1.2}
+  ],
+  eventos:[
+    {id:1, nombre:'Noche de karaoke', fecha:'2026-10-03', ini:'21:00', fin:'02:00', estado:'Realizado'},
+    {id:2, nombre:'Noche indie', fecha:'2026-10-09', ini:'21:00', fin:'02:00', estado:'Realizado'},
+    {id:3, nombre:'Cumpleaños privado', fecha:'2026-10-17', ini:'19:00', fin:'23:00', estado:'Cancelado'},
+    {id:4, nombre:'Karaoke de Halloween', fecha:'2026-10-30', ini:'21:00', fin:'02:00', estado:'Confirmado'},
+    {id:5, nombre:'Noche de rock en vivo', fecha:'2026-10-31', ini:'20:00', fin:'02:00', estado:'Borrador'},
+    {id:6, nombre:'Noche de jazz', fecha:'2026-11-06', ini:'20:00', fin:'01:00', estado:'Borrador'}
+  ],
+  bandas:[
+    {nombre:'Los Vecinos', cuenta:'Activa', conv:'Confirmada'},
+    {nombre:'Marea Alta', cuenta:'Activa', conv:'Propuesta'},
+    {nombre:'DJ Neón', cuenta:'Activa', conv:'Confirmada'},
+    {nombre:'Cuarto Oscuro', cuenta:'Invitación pendiente', conv:'—'}
+  ],
+  bares:[
+    {id:1, nombre:'Bar Nocturno Centro', dir:'Av. Juárez 120, Col. Centro', aforo:150, estado:'Aprobado'},
+    {id:2, nombre:'Bar Nocturno Sur', dir:'Calz. del Hueso 45, Col. Coapa', aforo:220, estado:'En registro'},
+    {id:3, nombre:'Terraza Norte', dir:'Av. Politécnico 310, Col. Lindavista', aforo:120, estado:'Suspendido'}
+  ],
+  solicitudes:[
+    {id:1, banda:'Marea Alta', fecha:'2026-11-14', ini:'21:00', fin:'01:00', msg:'Presentación con repertorio propio de 60 minutos.', estado:'Pendiente'},
+    {id:2, banda:'Cuarto Oscuro', fecha:'2026-11-14', ini:'22:00', fin:'02:00', msg:'Show acústico con una banda invitada.', estado:'Pendiente'},
+    {id:3, banda:'DJ Neón', fecha:'2026-11-21', ini:'22:00', fin:'03:00', msg:'Sesión de música electrónica.', estado:'Pendiente'},
+    {id:4, banda:'Los Vecinos', fecha:'2026-10-24', ini:'21:00', fin:'01:00', msg:'Noche de covers.', estado:'Aprobada'},
+    {id:5, banda:'Marea Alta', fecha:'2026-10-18', ini:'20:00', fin:'23:00', msg:'Presentación acústica.', estado:'Rechazada', motivo:'fecha reservada para un evento privado.'}
+  ],
+  staff:[['Ana R.','Barra'],['Luis M.','Seguridad'],['Sofía P.','Sonido'],['Diego C.','Acceso']]
+};
+const S = {role:null, ev:{resp:false,conf:false,rep:null}, layoutEstado:'Borrador', sim:null, objs:[], sel:null, nextId:1, msg:null, convEstado:'Propuesta'};
+
+/* =====================================================================
+   Utilidades
+   ===================================================================== */
+const $ = (s,r=document)=>r.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS=['lun','mar','mié','jue','vie','sáb','dom'];
+const EST_BADGE={Borrador:'b-gris',Confirmado:'b-ok',Cancelado:'b-gris',Realizado:'b-info',Validado:'b-ok',Inseguro:'b-bad',
+  Propuesta:'b-warn',Confirmada:'b-ok',Rechazada:'b-bad',Activa:'b-ok','Invitación pendiente':'b-warn',
+  Aprobado:'b-ok','En registro':'b-warn',Suspendido:'b-gris',Pendiente:'b-warn',Aprobada:'b-ok',Cancelada:'b-gris',Disponible:'b-ok'};
+const ICON={Borrador:'○',Confirmado:'✓',Cancelado:'✕',Realizado:'🔒',Validado:'✓',Inseguro:'⚠',Propuesta:'●',Confirmada:'✓',Rechazada:'✕',Activa:'✓','Invitación pendiente':'…',Aprobado:'✓','En registro':'…',Suspendido:'‖',Pendiente:'●',Aprobada:'✓',Cancelada:'✕',Disponible:'✓'};
+const badge = e=>`<span class="badge ${EST_BADGE[e]||'b-gris'}">${(ICON[e]||'')} ${esc(e)}</span>`;
+function modal(html){ $('#modal-root').innerHTML=`<div class="modal-bg" id="mbg"><div class="modal">${html}</div></div>`; }
+function closeModal(){ $('#modal-root').innerHTML=''; }
+function go(r){ location.hash='#'+r; }
+const toMin = t=>{const [h,m]=t.split(':').map(Number);return h*60+m;};
+function rango(ev){ let a=toMin(ev.ini), b=toMin(ev.fin); if(b<=a) b+=1440; return [a,b]; }
+function traslape(fecha,ini,fin,ignorar){
+  const n={ini,fin}; const [a,b]=rango(n);
+  return D.eventos.find(e=>e.id!==ignorar && e.estado!=='Cancelado' && e.fecha===fecha && (()=>{const [c,d]=rango(e);return a<d && b>c;})());
+}
+
+/* =====================================================================
+   Geometría y reglas (AABB estricto, malla, BFS y A*)
+   ===================================================================== */
+const ov = (a,b)=> a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;     // desigualdades estrictas
+function violaciones(objs){
+  const v=[]; const R=D.recinto;
+  objs.forEach(o=>{ if(o.x<0||o.y<0||o.x+o.w>R.W||o.y+o.h>R.H) v.push({r:'RN-04',ids:[o.id],m:`${o.n} queda fuera del recinto`}); });
+  for(let i=0;i<objs.length;i++) for(let j=i+1;j<objs.length;j++) if(ov(objs[i],objs[j])) v.push({r:'RN-01',ids:[objs[i].id,objs[j].id],m:`${objs[i].n} se superpone con ${objs[j].n}`});
+  objs.forEach(o=>D.salidas.forEach(s=>{ if(ov(o,s)||ov(o,s.despeje)) v.push({r:'RN-02',ids:[o.id],m:`${o.n} invade la salida ${s.id} o su área de despeje`}); }));
+  objs.forEach(o=>D.prohibidas.forEach(z=>{ if(ov(o,z)) v.push({r:'RN-03',ids:[o.id],m:`${o.n} invade ${z.id.toLowerCase()} de circulación`}); }));
+  D.catalogo.forEach(c=>{ const n=objs.filter(o=>o.tipo===c.id).length; if(n>c.disp) v.push({r:'RN-12',ids:objs.filter(o=>o.tipo===c.id).map(o=>o.id),m:`Se usan ${n} de ${c.disp} unidades de “${c.nombre}”`}); });
+  return v;
+}
+function malla(objs){
+  const R=D.recinto, cs=R.celda, gw=Math.round(R.W/cs), gh=Math.round(R.H/cs);
+  const occ=new Uint8Array(gw*gh), exit=new Uint8Array(gw*gh);
+  for(let j=0;j<gh;j++) for(let i=0;i<gw;i++){
+    const c={x:i*cs,y:j*cs,w:cs,h:cs};
+    if(objs.some(o=>ov(o,c))) occ[j*gw+i]=1;
+    if(D.salidas.some(s=>ov(s,c))){ exit[j*gw+i]=1; occ[j*gw+i]=0; }
+  }
+  return {gw,gh,cs,occ,exit};
+}
+const NB8=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,Math.SQRT2],[1,-1,Math.SQRT2],[-1,1,Math.SQRT2],[-1,-1,Math.SQRT2]];
+function vecinos(g,i,j){
+  const out=[]; for(const [di,dj,c] of NB8){
+    const a=i+di,b=j+dj; if(a<0||b<0||a>=g.gw||b>=g.gh||g.occ[b*g.gw+a]) continue;
+    if(di&&dj && (g.occ[j*g.gw+a]||g.occ[b*g.gw+i])) continue;               // sin atravesar esquinas
+    out.push([a,b,c]);
+  } return out;
+}
+function bfsDesdeSalidas(g){
+  const dist=new Int32Array(g.gw*g.gh).fill(-1); const q=[];
+  for(let k=0;k<g.exit.length;k++) if(g.exit[k]){dist[k]=0;q.push(k);}
+  for(let h=0;h<q.length;h++){ const k=q[h], i=k%g.gw, j=(k/g.gw)|0;
+    for(const [a,b] of vecinos(g,i,j)){ const n=b*g.gw+a; if(dist[n]<0){dist[n]=dist[k]+1;q.push(n);} } }
+  return dist;
+}
+function astar(g,start){
+  const exits=[]; for(let k=0;k<g.exit.length;k++) if(g.exit[k]) exits.push([k%g.gw,(k/g.gw)|0]);
+  const h=(i,j)=>Math.min(...exits.map(([x,y])=>Math.hypot(i-x,j-y)));
+  const key=(i,j)=>j*g.gw+i; const gs=new Map([[key(...start),0]]); const par=new Map(); const open=[[h(...start),...start]]; const closed=new Set(); let exp=0;
+  while(open.length){ open.sort((p,q)=>p[0]-q[0]); const [f,i,j]=open.shift(); const k=key(i,j); if(closed.has(k)) continue; closed.add(k); exp++;
+    if(g.exit[k]){ const path=[[i,j]]; let c=k; while(par.has(c)){c=par.get(c);path.push([c%g.gw,(c/g.gw)|0]);} return {path:path.reverse(),cost:gs.get(k)*g.cs,exp}; }
+    for(const [a,b,c] of vecinos(g,i,j)){ const n=key(a,b), ng=gs.get(k)+c; if(ng<(gs.get(n)??1e9)){gs.set(n,ng);par.set(n,k);open.push([ng+h(a,b),a,b]);} } }
+  return null;
+}
+function simular(objs){
+  const R=D.recinto; const g=malla(objs); const dist=bfsDesdeSalidas(g);
+  const ciegas=[]; let libres=0;
+  for(let k=0;k<g.occ.length;k++){ if(!g.occ[k]&&!g.exit[k]){ libres++; if(dist[k]<0) ciegas.push(k); } }
+  const S_libre=libres*g.cs*g.cs, porArea=Math.floor(S_libre/R.d), sumA=D.salidas.reduce((s,e)=>s+e.ancho,0), porSal=Math.floor(R.c*sumA);
+  const res={g,ciegas,S_libre,porArea,porSal,aforo:Math.min(porArea,porSal),rutas:[],maxM:0};
+  if(!ciegas.length){
+    // orígenes representativos: muestreo de puntos más lejanos
+    const cand=[]; for(let k=0;k<dist.length;k++) if(dist[k]>0) cand.push(k);
+    const chosen=[]; let far=cand.slice().sort((a,b)=>dist[b]-dist[a])[0];
+    while(far!==undefined && chosen.length<5){ chosen.push(far);
+      far=cand.map(k=>[k,Math.min(...chosen.map(c=>Math.hypot((k%g.gw)-(c%g.gw),((k/g.gw)|0)-((c/g.gw)|0))))]).sort((a,b)=>b[1]-a[1])[0][0]; }
+    chosen.forEach(k=>{ const r=astar(g,[k%g.gw,(k/g.gw)|0]); if(r){ res.rutas.push(r); res.maxM=Math.max(res.maxM,r.cost); } });
+  }
+  return res;
+}
+
+/* =====================================================================
+   Presets de layout (para demostración y capturas)
+   ===================================================================== */
+function mk(tipo,x,y,rot){ const c=D.catalogo.find(t=>t.id===tipo); const cnt=S.objs.filter(o=>o.tipo===tipo).length+1;
+  const o={id:S.nextId++,tipo,n:c.nombre+' '+cnt,x,y,w:rot?c.h:c.w,h:rot?c.w:c.h,rot:!!rot}; S.objs.push(o); return o; }
+function preset(nombre){
+  S.objs=[]; S.nextId=1; S.sel=null; S.sim=null; S.layoutEstado='Borrador'; S.msg=null;
+  if(nombre==='vacio') return;
+  mk('esc',1.0,0.5);
+  mk('barra',14.0,0.5); mk('barra',17.0,0.5);
+  for(let r=0;r<2;r++) for(let k=0;k<5;k++) mk('mesa4',8+2*k, 2.5+2*r);                 // zona superior
+  for(let r=0;r<2;r++) for(let k=0;k<7;k++) mk('mesa4',4+2*k, 8+2*r);                   // zona inferior
+  if(nombre==='colision'){ const m=S.objs.filter(o=>o.tipo==='mesa4'); m[4].x=m[5].x-0.5; m[4].y=m[5].y+0.4; // superpone 2 mesas
+    const z=m[14]; z.x=6.0; z.y=5.6; }                                                  // una mesa invade el pasillo
+  if(nombre==='ciega'){ S.objs=S.objs.filter(o=>!(o.tipo==='mesa4' && o.x>=13.5 && o.y>=8)); S.nextId=100;
+    mk('barra',14.0,8.0); mk('barra',14.0,9.7); mk('barra',13.3,8.0,1); mk('barra',17.0,8.0,1); }   // anillo de barras que encierra un hueco
+}
+
+/* =====================================================================
+   Vistas
+   ===================================================================== */
+const V = {};
+function navAdmin(on){
+  const it=[['agenda','Agenda'],['solicitudes','Solicitudes <span class="nb">3</span>'],['bares','Mis bares'],['recintos','Recinto del bar'],['mobiliario','Mobiliario'],['editor/valido','Editor de layout','editor'],['bandas','Bandas'],['bitacora','Bitácora']];
+  return it.map(([r,t,k])=>`<a data-go="${r}" class="${on===(k||r)?'on':''}">${t}</a>`).join('');
+}
+function shellAdmin(on,inner,extra=''){
+  const noside=(on==='editor');
+  return `<div class="shell-top"><div class="logo">[ Logotipo ]</div><div class="venue">Bar activo: <b>${esc(D.recinto.nombre)}</b> ▾</div><div class="sp"></div>
+    <span class="small mut">Administrador ▾</span><button class="btn sm" data-go="login">Salir</button></div>
+    <div class="shell-body">${noside?'':`<nav class="side">${navAdmin(on)}</nav>`}<main class="main">${noside?'<div class="small" style="margin-bottom:6px"><a data-go="agenda" href="#agenda">‹ Agenda</a> › <a data-go="evento" href="#evento">Noche de rock en vivo</a> › Layout del evento</div>':''}${inner}</main></div>
+    <div class="legal">ⓘ Herramienta de apoyo a la planeación. No constituye un dictamen ni sustituye los protocolos de Protección Civil (RNF-G01).</div>`;
+}
+/* ---- CU-01 Inicio de sesión */
+V.login=(p)=>{
+  S.role=null;
+  $('#app').innerHTML=`<div class="center"><div class="card loginbox">
+    <div class="logo">[ Logotipo ]</div><h2 class="pt" style="text-align:center">Iniciar sesión</h2>
+    <form id="f-login">
+      <label class="f"><span>Correo electrónico</span><input class="inp" id="lg-mail" type="email" value="${p==='error'?'admin@bar.mx':''}" placeholder="nombre@correo.com"></label>
+      <label class="f"><span>Contraseña</span><input class="inp" id="lg-pass" type="password" value="${p==='error'?'':''}" placeholder="••••••••"></label>
+      ${p==='error'?'<div class="err" role="alert">Credenciales inválidas. Verifica tu correo y contraseña.</div>':''}
+      ${p==='inactiva'?'<div class="err" role="alert">Cuenta inactiva. Contacta a soporte para reactivarla.</div>':''}
+      <button class="btn pri" style="width:100%" type="submit">Entrar</button>
+    </form>
+    <p class="small" style="text-align:center;margin:10px 0 0"><a href="#" id="lnk-rec">¿Olvidaste tu contraseña?</a></p>
+    <div class="demo">Atajos del prototipo:<br>
+      <button class="btn sm" data-go="agenda">Entrar como Administrador</button><button class="btn sm" data-go="banda-agenda">Entrar como Banda</button>
+      <button class="btn sm" data-go="login/error">Ver error</button></div>
+  </div></div>`;
+  $('#f-login').onsubmit=e=>{e.preventDefault(); go('login/error');};
+  $('#lnk-rec').onclick=e=>{e.preventDefault(); modal(`<h3>Recuperar contraseña</h3><label class="f"><span>Correo electrónico</span><input class="inp" placeholder="nombre@correo.com"></label><div class="okm">Si el correo existe, recibirás un enlace para restablecerla.</div><div style="text-align:right"><button class="btn" data-close>Cerrar</button></div>`);};
+};
+/* ---- CU-08 Activación por invitación */
+V.activar=(p)=>{
+  const exp=p==='expirado';
+  $('#app').innerHTML=`<div class="center"><div class="card loginbox">
+    <div class="logo">[ Logotipo ]</div><h2 class="pt" style="text-align:center">Activar cuenta</h2>
+    ${exp?`<div class="err" role="alert">La invitación expiró. Solicita el reenvío al administrador.</div><button class="btn" style="width:100%" data-go="login">Volver</button>`:`
+    <p class="small mut" style="margin-top:0">Invitación de <b>${esc(D.recinto.nombre)}</b> para la banda <b>Marea Alta</b>.</p>
+    <label class="f"><span>Correo (precargado, no editable)</span><input class="inp" value="mareaalta@correo.com" disabled></label>
+    <label class="f"><span>Nueva contraseña</span><input class="inp" id="ac-p1" type="password" placeholder="Mínimo 8 caracteres"></label>
+    <label class="f"><span>Confirmar contraseña</span><input class="inp" id="ac-p2" type="password"></label>
+    <div class="small" id="ac-req"></div>
+    <button class="btn pri" id="ac-ok" style="width:100%;margin-top:8px" disabled>Activar cuenta</button>
+    <div class="demo">Atajos: <button class="btn sm" data-go="activar/expirado">Ver token expirado</button></div>`}
+  </div></div>`;
+  if(!exp){
+    const upd=()=>{const a=$('#ac-p1').value,b=$('#ac-p2').value;
+      const req=[[a.length>=8,'Al menos 8 caracteres'],[/\d/.test(a),'Incluye un número'],[a&&a===b,'Las contraseñas coinciden']];
+      $('#ac-req').innerHTML=req.map(([k,t])=>`<div class="rule"><i class="${k?'ok-i':'no-i'}">${k?'✓':'✕'}</i><span>${t}</span></div>`).join('');
+      $('#ac-ok').disabled=!req.every(r=>r[0]);};
+    $('#ac-p1').oninput=$('#ac-p2').oninput=upd; upd();
+    $('#ac-ok').onclick=()=>go('banda-agenda');
+  }
+};
+/* ---- CU-05 Agenda */
+V.agenda=()=>{
+  S.role='admin';
+  const first=new Date(2026,9,1); let off=(first.getDay()+6)%7; const days=[];
+  for(let i=-off;i<35-off;i++){ const d=new Date(2026,9,1+i); days.push(d); }
+  const f=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  let cells=''; for(let w=0;w<5;w++){ cells+='<tr>'; for(let k=0;k<7;k++){ const d=days[w*7+k], o=d.getMonth()!==9;
+      const evs=D.eventos.filter(e=>e.fecha===f(d));
+      cells+=`<td class="${o?'o':''}">${d.getDate()}${evs.map(e=>`<span class="chip ${e.estado}" data-go="evento" title="${esc(e.nombre)} · ${e.estado}">${ICON[e.estado]} ${esc(e.nombre)}</span>`).join('')}</td>`; }
+    cells+='</tr>'; }
+  const prox=D.eventos.filter(e=>e.fecha>='2026-10-28').map(e=>`<div style="margin:0 0 8px"><b>${esc(e.nombre)}</b><br><span class="small mut">${e.fecha.slice(8)} ${MES[+e.fecha.slice(5,7)-1].slice(0,3)} · ${e.ini}–${e.fin}</span> ${badge(e.estado)}</div>`).join('');
+  $('#app').innerHTML=shellAdmin('agenda',`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><h2 class="pt" style="margin:0">Agenda de eventos</h2><span class="mut">octubre 2026</span><div style="flex:1"></div>
+      <button class="btn" data-go="agenda">‹</button><button class="btn" data-go="agenda">›</button><button class="btn pri" id="nuevo-ev">+ Nuevo evento</button></div>
+    <div class="row"><div class="col" style="flex:3"><table class="cal"><tr>${DIAS.map(x=>`<th>${x}</th>`).join('')}</tr>${cells}</table>
+      <div class="legend" style="margin-top:8px"><span><span class="chip Borrador" style="display:inline-block">○ Borrador</span></span><span><span class="chip Confirmado" style="display:inline-block">✓ Confirmado</span></span><span><span class="chip Cancelado" style="display:inline-block">✕ Cancelado</span></span><span><span class="chip Realizado" style="display:inline-block">🔒 Realizado (solo lectura)</span></span></div></div>
+      <div class="col card" style="flex:1.1"><h3>Próximos eventos</h3>${prox}</div></div>`);
+  $('#nuevo-ev').onclick=()=>nuevoEvento(false);
+  if(location.hash.includes('/nuevo')) nuevoEvento(location.hash.includes('/traslape'));
+};
+function nuevoEvento(conflicto){
+  modal(`<h3>Nuevo evento</h3>
+    <label class="f"><span>Nombre del evento</span><input class="inp" id="ne-n" value="Noche electrónica"></label>
+    <div class="row"><label class="f col"><span>Fecha</span><input class="inp" id="ne-f" type="date" value="${conflicto?'2026-10-31':'2026-11-13'}"></label>
+    <label class="f col"><span>Inicio</span><input class="inp" id="ne-i" type="time" value="${conflicto?'22:00':'21:00'}"></label>
+    <label class="f col"><span>Fin</span><input class="inp" id="ne-t" type="time" value="02:00"></label></div>
+    <div id="ne-msg"></div><div class="small mut">El evento se crea en estado <b>Borrador</b>.</div>
+    <div style="text-align:right;margin-top:10px"><button class="btn" data-close>Cancelar</button> <button class="btn pri" id="ne-ok">Crear evento</button></div>`);
+  const chk=()=>{ const t=traslape($('#ne-f').value,$('#ne-i').value,$('#ne-t').value);
+    $('#ne-msg').innerHTML=t?`<div class="err" role="alert"><b>Empalme de horario.</b> El recinto ya está ocupado por “${esc(t.nombre)}” (${t.ini}–${t.fin}). Elige otra fecha u horario <span style="white-space:nowrap">(RN-10)</span>.</div>`:''; $('#ne-ok').disabled=!!t; };
+  ['ne-f','ne-i','ne-t'].forEach(i=>$('#'+i).oninput=chk); chk();
+  $('#ne-ok').onclick=()=>{ D.eventos.push({id:D.eventos.length+1,nombre:$('#ne-n').value,fecha:$('#ne-f').value,ini:$('#ne-i').value,fin:$('#ne-t').value,estado:'Borrador'}); closeModal(); V.agenda(); };
+}
+/* ---- CU-05/06/07/13 Detalle del evento */
+function aforoPreset(){ const keep=[S.objs,S.nextId,S.sel,S.sim,S.layoutEstado,S.msg]; preset('valido'); const r=simular(S.objs); [S.objs,S.nextId,S.sel,S.sim,S.layoutEstado,S.msg]=keep; return r.aforo; }
+V.evento=(p)=>{
+  S.role='admin';
+  if(p==='listo'){ S.ev.resp=true; } if(p==='confirmado'){ S.ev.resp=true; S.ev.conf=true; S.ev.rep='Enviado'; }
+  const E_=S.ev, resp=E_.resp||S.convEstado!=='Propuesta', nPend=resp?0:1, puede=nPend===0;
+  const seguro=aforoPreset(), aforoEv=Math.floor(seguro*0.85/5)*5;
+  $('#app').innerHTML=shellAdmin('agenda',`
+    <div style="margin-bottom:6px" class="small"><a data-go="agenda" href="#agenda">Agenda</a> › Noche de rock en vivo</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap"><h2 class="pt" style="margin:0">Noche de rock en vivo</h2>${badge(E_.conf?'Confirmado':'Borrador')}
+      <span class="mut">sáb 31 oct 2026 · 20:00–02:00</span></div>
+    <div class="row">
+      <div class="col" style="flex:2">
+        <div class="card" style="margin-bottom:10px"><h4>Layout asociado</h4>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>Rock en vivo v3</b>${badge('Validado')}<span class="small mut">Aforo seguro: <b>${seguro}</b> · Aforo del evento: <b>${aforoEv}</b> (RN-09 ✓)</span><div style="flex:1"></div>
+          <button class="btn sm" data-go="editor/valido">Abrir en el editor</button></div></div>
+        <div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><h4>Convocatorias a bandas</h4><button class="btn sm" id="asig-b">+ Asignar banda</button></div>
+          <table class="t"><tr><th>Banda</th><th>Estado</th><th>Plazo de respuesta</th></tr>
+          <tr><td>Los Vecinos</td><td>${badge('Confirmada')}</td><td>—</td></tr>
+          <tr><td>DJ Neón</td><td>${badge('Confirmada')}</td><td>—</td></tr>
+          <tr><td>Marea Alta</td><td>${badge(resp?(S.convEstado==='Rechazada'?'Rechazada':'Confirmada'):'Propuesta')}</td><td>${resp?'—':'29 oct 2026'}</td></tr></table></div>
+        <div class="card"><div style="display:flex;justify-content:space-between"><h4>Lista de distribución (personal)</h4><button class="btn sm" id="asig-s">+ Asignar personal</button></div>
+          ${D.staff.map(x=>`<span class="chipx">${x[0]} · ${x[1]}</span>`).join('')}<div class="small mut" style="margin-top:4px">Reciben el PDF operativo por correo; no tienen cuenta en la plataforma.</div></div>
+      </div>
+      <div class="col" style="flex:1.1"><div class="card"><h4>Requisitos para confirmar</h4>
+        <div class="check"><i class="ok-i">✓</i><span>Layout validado (RN-06)</span></div>
+        <div class="check"><i class="${nPend?'no-i':'ok-i'}">${nPend?'✕':'✓'}</i><span>${nPend?'1 convocatoria sin respuesta dentro del plazo (RN-22)':'Todas las convocatorias respondidas (RN-22)'}</span></div>
+        <div class="check"><i class="ok-i">✓</i><span>Sin traslape de horario (RN-10)</span></div>
+        <button class="btn pri" id="ev-conf" style="width:100%;margin-top:8px" ${(!puede||E_.conf)?'disabled':''}>${E_.conf?'Evento confirmado':'Confirmar evento'}</button>
+        ${!puede?'<div class="small mut" style="margin-top:5px">Se habilita cuando se cumplan todos los requisitos.</div>':''}
+        <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+        <h4>Reporte operativo</h4>
+        <button class="btn" id="ev-rep" style="width:100%" ${(!E_.conf||E_.rep)?'disabled':''}>Generar reporte y notificar</button>
+        ${E_.rep==='Enviado'?`<div class="okm">Reporte enviado a 4 integrantes del personal y 3 bandas. Se generó en segundo plano con n8n.</div>`:''}
+        ${E_.rep==='Procesando'?'<div class="wrn">Procesando en segundo plano…</div>':''}
+      </div></div></div>`);
+  $('#ev-conf').onclick=()=>{E_.conf=true; V.evento('');};
+  $('#ev-rep').onclick=()=>{E_.rep='Procesando'; V.evento(''); setTimeout(()=>{E_.rep='Enviado'; if(location.hash.startsWith('#evento')) V.evento('');},1400);};
+  $('#asig-b').onclick=()=>{ modal(`<h3>Asignar banda</h3><label class="f"><span>Banda</span><select class="inp" id="ab-s">${D.bandas.map(b=>`<option>${b.nombre}</option>`).join('')}</select></label><div id="ab-m"></div><div style="text-align:right"><button class="btn" data-close>Cancelar</button> <button class="btn pri" id="ab-ok">Asignar</button></div>`);
+    $('#ab-ok').onclick=()=>{ const n=$('#ab-s').value; if(n==='DJ Neón'||n==='Los Vecinos'||n==='Marea Alta'){ $('#ab-m').innerHTML=`<div class="err" role="alert">${n} ya tiene una convocatoria en ese horario (RN-11).</div>`; } else closeModal(); }; };
+  $('#asig-s').onclick=()=>modal(`<h3>Asignar personal</h3><label class="f"><span>Nombre</span><input class="inp" value="Pedro S."></label><label class="f"><span>Función</span><input class="inp" value="Guardarropa"></label><label class="f"><span>Correo</span><input class="inp" value="pedro@correo"></label><div class="err" role="alert">Correo con formato inválido. Revisa el campo.</div><div style="text-align:right"><button class="btn" data-close>Cancelar</button> <button class="btn pri" disabled>Guardar</button></div>`);
+};
+/* ---- CU-02 Catálogo de mobiliario */
+V.mobiliario=(p)=>{
+  S.role='admin';
+  $('#app').innerHTML=shellAdmin('mobiliario',`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><h2 class="pt" style="margin:0">Catálogo de mobiliario</h2><div style="flex:1"></div><button class="btn pri" id="mb-add">+ Agregar mobiliario</button></div>
+    <div class="row"><div class="col" style="flex:2"><table class="t"><tr><th>Representación</th><th>Nombre</th><th>Dimensiones (m)</th><th>Personas</th><th>Disponibles</th><th></th></tr>
+      ${D.catalogo.map(c=>`<tr><td><span style="display:inline-block;width:${Math.round(c.w*16)}px;height:${Math.round(c.h*16)}px;border:1.5px solid #555;background:#e6e6e6;vertical-align:middle"></span></td><td>${c.nombre}</td><td>${c.w.toFixed(1)} × ${c.h.toFixed(1)}</td><td>${c.pers||'—'}</td><td>${c.disp}</td><td><button class="btn sm">Editar</button> <button class="btn sm bad">Eliminar</button></td></tr>`).join('')}</table>
+      <p class="small mut">La cantidad disponible limita cuántas piezas pueden colocarse en un layout (RN-12).</p></div>
+      <div class="col card" id="mb-form" style="${p==='form'?'':'display:none'}"><h4>Agregar mobiliario</h4>
+        <label class="f"><span>Nombre *</span><input class="inp" value="Sofá lounge"></label>
+        <div class="row"><label class="f col"><span>Largo (m) *</span><input class="inp" value="1.8"></label><label class="f col"><span>Ancho (m) *</span><input class="inp" value="0.8"></label></div>
+        <div class="row"><label class="f col"><span>Personas *</span><input class="inp" value=""></label><label class="f col"><span>Cantidad disponible *</span><input class="inp" value="6"></label></div>
+        <label class="f"><span>Representación gráfica *</span><select class="inp"><option>Rectángulo</option><option>Círculo</option></select></label>
+        <div class="err" role="alert">Datos incompletos: completa los campos obligatorios (Personas).</div>
+        <div style="text-align:right"><button class="btn">Cancelar</button> <button class="btn pri">Guardar</button></div></div></div>`);
+  $('#mb-add').onclick=()=>{ $('#mb-form').style.display='block'; };
+};
+/* ---- RF-B01 Recintos */
+V.recintos=()=>{
+  S.role='admin'; const R=D.recinto;
+  $('#app').innerHTML=shellAdmin('recintos',`<h2 class="pt" style="margin-bottom:4px">Recinto del bar</h2><div class="small mut" style="margin-bottom:10px">${esc(R.nombre)} · los cambios en un bar aprobado vuelven a evaluar sus requisitos de aprobación (RN-29).</div>
+    <div class="row"><div class="col card"><h4>Dimensiones y escala</h4>
+      <div class="row"><label class="f col"><span>Largo (m)</span><input class="inp" value="${R.W}"></label><label class="f col"><span>Ancho (m)</span><input class="inp" value="${R.H}"></label></div>
+      <label class="f"><span>Escala del lienzo (px por metro)</span><input class="inp" value="32" disabled></label>
+      <div class="small mut" style="margin:-4px 0 8px">Bloqueada: existen layouts asociados (RN-15).</div>
+      <h4>Parámetros de seguridad</h4>
+      <div class="row"><label class="f col"><span>Tamaño de celda (m)</span><input class="inp" value="${R.celda}"></label><label class="f col"><span>Pasillo mínimo (m)</span><input class="inp" value="${R.pasilloMin.toFixed(2)}"></label></div>
+      <div class="row"><label class="f col"><span>Densidad d (m²/persona)</span><input class="inp" value="${R.d}"></label><label class="f col"><span>Capacidad de salida c (pers./m)</span><input class="inp" value="${R.c}"></label></div></div>
+    <div class="col"><div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><h4>Salidas de emergencia</h4><button class="btn sm">+ Agregar</button></div>
+      <table class="t"><tr><th>Salida</th><th>Ancho (m)</th><th>Despeje (m)</th></tr>${D.salidas.map(s=>`<tr><td>${s.id}</td><td>${s.ancho.toFixed(1)}</td><td>1.0</td></tr>`).join('')}</table></div>
+      <div class="card"><div style="display:flex;justify-content:space-between"><h4>Pasillos (zonas prohibidas)</h4><button class="btn sm">+ Agregar</button></div>
+      <table class="t"><tr><th>Zona</th><th>Tamaño (m)</th></tr>${D.prohibidas.map(z=>`<tr><td>${z.id}</td><td>${z.w.toFixed(1)} × ${z.h.toFixed(1)}</td></tr>`).join('')}</table></div></div></div>
+    <div style="text-align:right;margin-top:10px"><button class="btn pri">Guardar recinto</button></div>`);
+};
+
+/* ---- CU-14 / CU-15 Mis bares y requisitos de aprobación */
+const REQ_SUR=[
+  [true,'1. Datos generales completos','nombre, dirección, contacto y horario'],
+  [true,'2. Ubicación marcada en el mapa',''],
+  [true,'3. Dimensiones, escala y perímetro válidos',''],
+  [false,'4. Al menos una salida de emergencia válida','S1 mide 0.7 m; el mínimo es 0.9 m'],
+  [true,'5. Plano vacío sin zonas ciegas (RN-08)',''],
+  [false,'6. Aforo declarado ≤ aforo seguro (RN-09)','declarado 220; aforo seguro calculado 140'],
+  [false,'7. Aviso legal aceptado (RNF-G01)','falta la aceptación'],
+  [true,'8. Bar de un solo piso (RN-36)','']
+];
+V.bares=(p)=>{
+  S.role='admin'; const ok=p==='ok'; const sel=ok?D.bares[0]:D.bares[1];
+  const reqs=ok?REQ_SUR.map(r=>[true,r[1],'']):REQ_SUR; const n=reqs.filter(r=>r[0]).length;
+  $('#app').innerHTML=shellAdmin('bares',`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><h2 class="pt" style="margin:0">Mis bares</h2><div style="flex:1"></div><button class="btn pri">+ Registrar bar</button></div>
+    <table class="t" style="margin-bottom:12px"><tr><th>Bar</th><th>Dirección</th><th>Aforo declarado</th><th>Estado</th><th></th></tr>
+      ${D.bares.map(b=>`<tr style="${b.id===sel.id?'background:#f0f4fa':''}"><td><b>${esc(b.nombre)}</b></td><td>${esc(b.dir)}</td><td>${b.aforo}</td><td>${badge(b.estado)}</td><td><button class="btn sm">${b.id===sel.id?'Editando':'Seleccionar'}</button></td></tr>`).join('')}</table>
+    <div class="row"><div class="col card" style="flex:1.15"><h4>Datos y ubicación · ${esc(sel.nombre)}</h4>
+      <label class="f"><span>Nombre *</span><input class="inp" value="${esc(sel.nombre)}"></label>
+      <label class="f"><span>Dirección *</span><input class="inp" value="${esc(sel.dir)}"></label>
+      <div class="row"><label class="f col"><span>Teléfono de contacto *</span><input class="inp" value="55 5555 0123"></label><label class="f col"><span>Horario de operación *</span><input class="inp" value="Jue–sáb 20:00–03:00"></label></div>
+      <div class="row"><label class="f col"><span>Aforo máximo declarado *</span><input class="inp" value="${sel.aforo}"></label><label class="f col"><span>Número de pisos *</span><select class="inp" id="pisos"><option value="1">1 piso</option><option value="2">2 pisos</option><option value="3">3 o más pisos</option></select></label></div>
+      <div class="err" id="pisoErr" style="display:none">La plataforma solo admite bares de un piso (RN-36). No se puede guardar este bar.</div>
+      <label class="f"><span>Folio de Protección Civil (opcional)</span><input class="inp" placeholder="No se verifica"></label>
+      <label class="f"><span>Ubicación en el mapa *</span><div class="map"><b>📍</b><span>19.3037, −99.1504</span></div></label>
+      <div class="check" style="margin:2px 0 8px"><i>${ok?'☑':'☐'}</i><span class="small">Entiendo que la plataforma es una herramienta de apoyo y no sustituye el dictamen de Protección Civil.</span></div>
+      <div style="text-align:right"><button class="btn">Guardar datos</button></div></div>
+    <div class="col card" style="flex:1"><h4>Requisitos de aprobación</h4>
+      ${reqs.map(r=>`<div class="check"><i class="${r[0]?'ok-i':'no-i'}">${r[0]?'✓':'✕'}</i><span>${r[1]}${r[2]&&!r[0]?`<br><span class="small mut">${r[2]}</span>`:''}</span></div>`).join('')}
+      <div class="${n===8?'okm':'wrn'}" style="margin-top:10px">${n===8?'Cumple los 8 requisitos: el bar está aprobado y visible en el catálogo.':`Cumple ${n} de 8. Mientras no cumpla todos, el bar permanece <b>En registro</b> y no aparece en el catálogo (RN-28).`}</div>
+      <button class="btn pri" style="width:100%" data-go="${ok?'bares':'bares/ok'}">Evaluar requisitos</button></div></div>`);
+  const pis=$('#pisos'); if(pis) pis.onchange=()=>{ $('#pisoErr').style.display=pis.value==='1'?'none':'block'; };
+};
+/* ---- CU-17 Solicitudes de eventos */
+const fmtF=f=>`${+f.slice(8)} ${MES[+f.slice(5,7)-1].slice(0,3)}`;
+function solTr(x){
+  const choca=x.estado==='Pendiente'&&D.solicitudes.find(y=>y.id!==x.id&&y.estado==='Pendiente'&&y.fecha===x.fecha&&(()=>{const [a,b]=rango(x),[c,d]=rango(y);return a<d&&b>c;})());
+  const ver=x.estado==='Pendiente'?(choca?`<span class="small" style="color:var(--warn)">⚠ Traslapa con ${esc(choca.banda)} (RN-33)</span>`:'<span class="small ok-i">✓ Sin traslape</span>'):(x.motivo?`<span class="small mut">Motivo: ${esc(x.motivo)}</span>`:'<span class="small mut">—</span>');
+  const act=x.estado==='Pendiente'?`<button class="btn sm pri" data-ap="${x.id}">Aprobar</button> <button class="btn sm bad" data-rc="${x.id}">Rechazar</button>`:'';
+  return `<tr><td><b>${esc(x.banda)}</b></td><td style="white-space:nowrap">${fmtF(x.fecha)} · ${x.ini}–${x.fin}</td><td class="small">${esc(x.msg)}</td><td>${ver}</td><td>${badge(x.estado)}</td><td style="white-space:nowrap">${act}</td></tr>`;
+}
+V.solicitudes=(p)=>{
+  S.role='admin';
+  const pend=D.solicitudes.filter(x=>x.estado==='Pendiente').length;
+  $('#app').innerHTML=shellAdmin('solicitudes',`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><h2 class="pt" style="margin:0">Solicitudes de eventos</h2><span class="mut">${esc(D.recinto.nombre)}</span></div>
+    <div class="tabs" style="margin:4px 0 10px"><a class="on">Pendientes (${pend})</a><a>Aprobadas</a><a>Rechazadas</a><a>Todas</a></div>
+    <table class="t"><tr><th>Banda</th><th>Fecha y horario</th><th>Mensaje</th><th>Verificación</th><th>Estado</th><th></th></tr>${D.solicitudes.map(solTr).join('')}</table>
+    <p class="small mut" style="margin-top:8px">Al aprobar una solicitud se crea un evento en <b>Borrador</b> con la banda asignada y se rechazan las solicitudes pendientes que se traslapen con ella (RN-33). Al rechazar es obligatorio indicar el motivo (RN-34).</p>`);
+  const rechazar=(id,err)=>modal(`<h3>Rechazar solicitud</h3><div class="small mut">${esc(D.solicitudes.find(x=>x.id===id).banda)} · ${fmtF(D.solicitudes.find(x=>x.id===id).fecha)}</div>
+    <label class="f" style="margin-top:8px"><span>Motivo del rechazo *</span><textarea class="inp" rows="3" id="rc-m"></textarea></label>
+    ${err?'<div class="err" role="alert">El motivo es obligatorio para rechazar una solicitud (RN-34).</div>':''}
+    <div style="text-align:right"><button class="btn" data-close>Cancelar</button> <button class="btn bad" id="rc-ok">Rechazar solicitud</button></div>`);
+  document.querySelectorAll('[data-rc]').forEach(b=>b.onclick=()=>{ const id=+b.dataset.rc; rechazar(id,false);
+    $('#rc-ok').onclick=()=>{ const m=$('#rc-m').value.trim(); if(!m){ rechazar(id,true); $('#rc-ok').onclick=()=>{}; return; } const x=D.solicitudes.find(y=>y.id===id); x.estado='Rechazada'; x.motivo=m; closeModal(); V.solicitudes(''); }; });
+  document.querySelectorAll('[data-ap]').forEach(b=>b.onclick=()=>{ const id=+b.dataset.ap; const x=D.solicitudes.find(y=>y.id===id);
+    D.solicitudes.forEach(y=>{ if(y.id!==id&&y.estado==='Pendiente'&&y.fecha===x.fecha){ const [a,b2]=rango(x),[c,d]=rango(y); if(a<d&&b2>c){ y.estado='Rechazada'; y.motivo='otra solicitud traslapada fue aprobada.'; } } });
+    x.estado='Aprobada'; D.eventos.push({id:D.eventos.length+1,nombre:'Evento de '+x.banda,fecha:x.fecha,ini:x.ini,fin:x.fin,estado:'Borrador'}); V.solicitudes(''); });
+  if(p==='rechazar'){ rechazar(1,true); }
+};
+/* ---- CU-08 Bandas e invitaciones */
+V.bandas=()=>{
+  S.role='admin';
+  $('#app').innerHTML=shellAdmin('bandas',`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><h2 class="pt" style="margin:0">Bandas</h2><div style="flex:1"></div><button class="btn pri" id="inv">+ Invitar banda</button></div>
+    <table class="t"><tr><th>Banda</th><th>Cuenta</th><th>Rider vigente</th><th></th></tr>
+    ${D.bandas.map((b,i)=>`<tr><td>${b.nombre}</td><td>${badge(b.cuenta)}</td><td>${i<3?'<a href="#">rider_v'+(3-i%2)+'.pdf</a>':'—'}</td><td>${b.cuenta==='Activa'?'<button class="btn sm">Ver historial</button>':'<button class="btn sm">Reenviar invitación</button>'}</td></tr>`).join('')}</table>`);
+  $('#inv').onclick=()=>modal(`<h3>Invitar banda</h3><label class="f"><span>Nombre artístico</span><input class="inp" value="Cuarto Oscuro"></label><label class="f"><span>Correo</span><input class="inp" value="cuartooscuro@correo.com"></label><div class="okm">Se enviará un enlace de activación de un solo uso que expira en el plazo definido (RN-23).</div><div style="text-align:right"><button class="btn" data-close>Cancelar</button> <button class="btn pri" data-close>Enviar invitación</button></div>`);
+};
+V.bitacora=()=>{
+  S.role='admin';
+  $('#app').innerHTML=shellAdmin('bitacora',`<h2 class="pt">Bitácora de seguridad</h2><p class="small mut" style="margin-top:-4px">Cada regla espacial violada queda registrada, aunque el usuario continúe editando (RN-16).</p>
+   <table class="t"><tr><th>Fecha y hora</th><th>Layout</th><th>Regla</th><th>Detalle</th><th>Usuario</th></tr>
+   <tr><td>28 oct 22:41</td><td>Rock en vivo v3</td><td style="white-space:nowrap">RN-03</td><td>Mesa redonda 15 invade pasillo 2</td><td>admin@bar.mx</td></tr>
+   <tr><td>28 oct 22:40</td><td>Rock en vivo v3</td><td style="white-space:nowrap">RN-01</td><td>Mesa redonda 5 se superpone con Mesa redonda 6</td><td>admin@bar.mx</td></tr>
+   <tr><td>27 oct 19:12</td><td>Rock en vivo v2</td><td style="white-space:nowrap">RN-08</td><td>Zona sin ruta de salida (6 celdas)</td><td>admin@bar.mx</td></tr></table>`);
+};
+
+/* ---- CU-03/04/12 Editor de layout */
+const CV={s:32,el:null,ctx:null,drag:null};
+V.editor=(p)=>{
+  S.role='admin';
+  if(p==='valido'||p==='colision'||p==='ciega'||p==='vacio'||p==='sim'||p==='simciega'){
+    preset(p==='sim'?'valido':p==='simciega'?'ciega':p);
+    if(p==='sim'||p==='simciega'){ S.sim=simular(S.objs); S.layoutEstado=S.sim.ciegas.length?'Inseguro':'Borrador'; }
+  } else if(!S.objs.length) preset('valido');
+  drawEditor();
+};
+function drawEditor(){
+  const R=D.recinto; const v=violaciones(S.objs); const bad=new Set(v.flatMap(x=>x.ids));
+  const sim=S.sim; const sel=S.objs.find(o=>o.id===S.sel);
+  const used={}; S.objs.forEach(o=>used[o.tipo]=(used[o.tipo]||0)+1);
+  const rules=[['RN-01','Sin superposición de objetos'],['RN-02','Salidas despejadas'],['RN-03','Pasillos libres'],['RN-04','Dentro del recinto'],['RN-12','Inventario disponible']];
+  const ruleHtml=rules.map(([r,t])=>{ const f=v.filter(x=>x.r===r).length; return `<div class="rule"><i class="${f?'no-i':'ok-i'}">${f?'✕':'✓'}</i><span><b>${r}</b> ${t}${f?` (${f})`:''}</span></div>`; }).join('')
+    + (sim?`<div class="rule"><i class="${sim.ciegas.length?'no-i':'ok-i'}">${sim.ciegas.length?'✕':'✓'}</i><span><b>RN-08</b> Sin zonas ciegas${sim.ciegas.length?` (${sim.ciegas.length} celdas)`:''}</span></div>`:'');
+  const bloquea=v.length>0; const st=S.layoutEstado;
+  $('#app').innerHTML=shellAdmin('editor',`
+    <div class="tools"><b>Rock en vivo v3</b>${badge(st)}<div class="sp"></div>
+      <button class="btn sm" id="b-rot" ${sel?'':'disabled'}>Rotar 90° (R)</button><button class="btn sm" id="b-del" ${sel?'':'disabled'}>Eliminar (Supr)</button>
+      <button class="btn" id="b-sim">Simular evacuación</button><button class="btn" id="b-val">Validar</button>
+      <button class="btn pri" id="b-save" ${bloquea?'disabled':''} title="${bloquea?'No se puede guardar: corrige las reglas marcadas':''}">Guardar</button></div>
+    <div class="ed">
+      <div class="pal card"><h4>Catálogo</h4>${D.catalogo.map(c=>`<div class="it" data-tipo="${c.id}"><b><span class="sw" style="width:${Math.round(c.w*7)}px;height:${Math.round(c.h*7)}px"></span>${c.nombre}</b><span>${c.w.toFixed(1)}×${c.h.toFixed(1)} m · ${used[c.id]||0}/${c.disp} en uso</span></div>`).join('')}
+        <div class="small mut">Arrastra una pieza al lienzo.</div>
+        <div class="demo" style="margin-top:8px">Ejemplos:<br><button class="btn sm" data-go="editor/valido">Válido</button><button class="btn sm" data-go="editor/colision">Colisión</button><button class="btn sm" data-go="editor/ciega">Zona ciega</button></div></div>
+      <div class="cv"><div id="cvwrap"><canvas id="cv"></canvas></div>
+        <div class="legend"><span><span class="k" style="background:#e6e6e6"></span>Objeto</span><span><span class="k" style="background:#f9c9c9;border-color:#c62828"></span>Conflicto (rojo + “!”)</span>
+        <span><span class="k" style="background:repeating-linear-gradient(45deg,#f2c773 0 3px,#fff 3px 6px)"></span>Zona prohibida</span><span><span class="k" style="background:#bfe3c1;border-color:#2e7d32"></span>Salida y despeje</span>
+        ${sim?`<span><span class="k" style="background:#1f4e8c"></span>Ruta de A*</span><span><span class="k" style="background:repeating-linear-gradient(135deg,#e57373 0 3px,#fff 3px 6px)"></span>Zona ciega</span>`:''}</div></div>
+      <div class="prop"><div class="card" style="margin-bottom:8px"><h4>Reglas espaciales</h4>${ruleHtml}</div>
+        ${v.length?`<div class="err" role="alert" style="margin-top:0"><b>${v.length} conflicto${v.length>1?'s':''}.</b><br>${v.slice(0,3).map(x=>`${x.r}: ${esc(x.m)}`).join('<br>')}${v.length>3?'<br>…':''}</div>`:''}
+        ${sel?`<div class="card" style="margin-bottom:8px"><h4>${esc(sel.n)}</h4><div class="kpi"><span>Posición (m)</span><span>${sel.x.toFixed(1)} , ${sel.y.toFixed(1)}</span></div><div class="kpi"><span>Tamaño (m)</span><span>${sel.w.toFixed(1)} × ${sel.h.toFixed(1)}</span></div></div>`:''}
+        ${sim?`<div class="card"><h4>Resultado de la simulación</h4>
+          ${sim.ciegas.length?`<div class="err" role="alert" style="margin-top:0"><b>Layout inseguro.</b> Hay zonas sin ruta hacia una salida (RN-08). Libera el paso o retira el mobiliario que las encierra.</div>`
+           :`<div class="kpi"><span>Rutas calculadas</span><span>${sim.rutas.length}</span></div><div class="kpi"><span>Ruta más larga</span><span>${sim.maxM.toFixed(1)} m</span></div>`}
+          <div class="kpi"><span>Área libre S</span><span>${sim.S_libre.toFixed(1)} m²</span></div><div class="kpi"><span>Límite por área (S/d)</span><span>${sim.porArea}</span></div><div class="kpi"><span>Límite por salidas (c·Σa)</span><span>${sim.porSal}</span></div>
+          ${sim.ciegas.length?'':`<div class="kpi big"><span>Aforo seguro</span><span>${sim.aforo} pers.</span></div>`}</div>`:''}
+      </div></div>`);
+  setupCanvas(); bindEditor();
+}
+function setupCanvas(){
+  const cv=$('#cv'); const R=D.recinto; const dpr=Math.max(2,window.devicePixelRatio||1);
+  const wrapW=Math.min(R.W*CV.s, Math.max(300,($('.cv').clientWidth||R.W*CV.s)-4)); CV.s=wrapW/R.W;
+  cv.width=Math.round(R.W*CV.s*dpr); cv.height=Math.round(R.H*CV.s*dpr); cv.style.width=Math.round(R.W*CV.s)+'px'; cv.style.height=Math.round(R.H*CV.s)+'px';
+  CV.el=cv; CV.ctx=cv.getContext('2d'); CV.ctx.setTransform(dpr,0,0,dpr,0,0); paint();
+}
+function hatch(ctx,x,y,w,h,col,gap=7,ang=1){
+  ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip(); ctx.strokeStyle=col; ctx.lineWidth=1;
+  for(let k=-h;k<w+h;k+=gap){ ctx.beginPath(); if(ang>0){ctx.moveTo(x+k,y+h);ctx.lineTo(x+k+h,y);} else {ctx.moveTo(x+k,y);ctx.lineTo(x+k+h,y+h);} ctx.stroke(); } ctx.restore();
+}
+function paint(){
+  const ctx=CV.ctx, s=CV.s, R=D.recinto, v=violaciones(S.objs), bad=new Set(v.flatMap(x=>x.ids)); const sim=S.sim;
+  ctx.clearRect(0,0,R.W*s,R.H*s); ctx.fillStyle='#fff'; ctx.fillRect(0,0,R.W*s,R.H*s);
+  ctx.strokeStyle='#e3e3e0'; ctx.lineWidth=1; for(let x=1;x<R.W;x++){ctx.beginPath();ctx.moveTo(x*s,0);ctx.lineTo(x*s,R.H*s);ctx.stroke();} for(let y=1;y<R.H;y++){ctx.beginPath();ctx.moveTo(0,y*s);ctx.lineTo(R.W*s,y*s);ctx.stroke();}
+  D.prohibidas.forEach(z=>{ ctx.fillStyle='rgba(242,199,115,.22)'; ctx.fillRect(z.x*s,z.y*s,z.w*s,z.h*s); hatch(ctx,z.x*s,z.y*s,z.w*s,z.h*s,'#d49a2a',8,1); });
+  ctx.fillStyle='#7a4d00'; ctx.font=`${Math.max(11,s*0.4)}px Arial`; ctx.textAlign='left'; ctx.fillText('Pasillo (zona prohibida)',12.2*s,6.75*s);
+  D.salidas.forEach(e=>{ const d=e.despeje; ctx.fillStyle='rgba(191,227,193,.55)'; ctx.fillRect(d.x*s,d.y*s,d.w*s,d.h*s); ctx.fillStyle='#2e7d32'; ctx.fillRect(e.x*s,e.y*s,e.w*s,e.h*s);
+    ctx.fillStyle='#1c4d1f'; ctx.font=`bold ${Math.max(11,s*0.42)}px Arial`; ctx.textAlign=e.id==='S2'?'right':'right'; ctx.fillText('Salida '+e.id.slice(1),e.id==='S2'?19.5*s:(e.x-0.15)*s,(e.id==='S2'?5.8:11.8)*s); });
+  // zonas ciegas
+  if(sim&&sim.ciegas.length){ const g=sim.g; sim.ciegas.forEach(k=>{ const i=k%g.gw,j=(k/g.gw)|0; ctx.fillStyle='rgba(229,115,115,.35)'; ctx.fillRect(i*g.cs*s,j*g.cs*s,g.cs*s,g.cs*s); hatch(ctx,i*g.cs*s,j*g.cs*s,g.cs*s,g.cs*s,'#c62828',4,-1); }); }
+  S.objs.forEach(o=>{ const b=bad.has(o.id); ctx.fillStyle=b?'#f9c9c9':(o.tipo==='esc'?'#d6d6d2':o.tipo==='barra'?'#cfcfca':'#e6e6e6'); ctx.fillRect(o.x*s,o.y*s,o.w*s,o.h*s);
+    ctx.lineWidth=(o.id===S.sel)?2.5:1.4; ctx.strokeStyle=b?'#c62828':(o.id===S.sel?'#1f4e8c':'#555'); ctx.strokeRect(o.x*s,o.y*s,o.w*s,o.h*s);
+    ctx.fillStyle=b?'#c62828':'#333'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font=`${b?'bold ':''}${Math.max(11,s*0.4)}px Arial`;
+    const lab=b?'!':(o.tipo==='esc'?'Escenario':(o.tipo==='barra'&&o.w>o.h)?'Barra':''); if(lab&&(b||o.w*s>=lab.length*5)) ctx.fillText(lab,(o.x+o.w/2)*s,(o.y+o.h/2)*s); });
+  if(sim&&!sim.ciegas.length){ ctx.lineWidth=2.4; ctx.strokeStyle='#1f4e8c'; ctx.fillStyle='#1f4e8c'; const g=sim.g;
+    sim.rutas.forEach(r=>{ ctx.beginPath(); r.path.forEach(([i,j],n)=>{const x=(i+.5)*g.cs*s,y=(j+.5)*g.cs*s; n?ctx.lineTo(x,y):ctx.moveTo(x,y);}); ctx.stroke();
+      const [i0,j0]=r.path[0]; ctx.beginPath(); ctx.arc((i0+.5)*g.cs*s,(j0+.5)*g.cs*s,3.6,0,7); ctx.fill();
+      const [i1,j1]=r.path[r.path.length-1],[i2,j2]=r.path[Math.max(0,r.path.length-3)]; const ang=Math.atan2(j1-j2,i1-i2),ex=(i1+.5)*g.cs*s,ey=(j1+.5)*g.cs*s;
+      ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(ex-9*Math.cos(ang-.45),ey-9*Math.sin(ang-.45)); ctx.lineTo(ex-9*Math.cos(ang+.45),ey-9*Math.sin(ang+.45)); ctx.closePath(); ctx.fill(); }); }
+  ctx.strokeStyle='#222'; ctx.lineWidth=3; ctx.strokeRect(1.5,1.5,R.W*s-3,R.H*s-3);
+}
+function bindEditor(){
+  const cv=CV.el, s=()=>CV.s;
+  const pos=e=>{const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/s(), y:(e.clientY-r.top)/s(), inside:e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom};};
+  const snap=v=>Math.round(v*10)/10;
+  cv.onpointerdown=e=>{ const p=pos(e); const o=[...S.objs].reverse().find(o=>p.x>=o.x&&p.x<=o.x+o.w&&p.y>=o.y&&p.y<=o.y+o.h);
+    S.sel=o?o.id:null; if(o){ CV.drag={o,dx:p.x-o.x,dy:p.y-o.y,fromCat:false,nv:violaciones(S.objs).length}; } S.sim=null; if(S.layoutEstado==='Validado') S.layoutEstado='Borrador'; refreshSide(); paint(); };
+  document.onpointermove=e=>{ const d=CV.drag; if(!d) return; const p=pos(e);
+    if(d.fromCat){ if(!p.inside) return; if(!S.objs.includes(d.o)) { S.objs.push(d.o); S.sel=d.o.id; } }
+    d.o.x=snap(Math.min(Math.max(p.x-d.dx,-0.5),D.recinto.W-d.o.w+0.5)); d.o.y=snap(Math.min(Math.max(p.y-d.dy,-0.5),D.recinto.H-d.o.h+0.5)); const nv=violaciones(S.objs).length; if(nv!==d.nv){ d.nv=nv; S.layoutEstado=S.layoutEstado==='Validado'?'Borrador':S.layoutEstado; drawEditor(); } else paint(); };
+  document.onpointerup=e=>{ const d=CV.drag; if(!d) return; CV.drag=null; if(d.fromCat&&!S.objs.includes(d.o)){ return; } S.sim=null; drawEditor(); };
+  document.querySelectorAll('.pal .it').forEach(it=>it.onpointerdown=e=>{ const c=D.catalogo.find(t=>t.id===it.dataset.tipo); const cnt=S.objs.filter(o=>o.tipo===c.id).length+1;
+    const o={id:S.nextId++,tipo:c.id,n:c.nombre+' '+cnt,x:0,y:0,w:c.w,h:c.h}; CV.drag={o,dx:c.w/2,dy:c.h/2,fromCat:true}; e.preventDefault(); });
+  $('#b-rot').onclick=rotar; $('#b-del').onclick=borrar;
+  $('#b-sim').onclick=()=>{ S.sim=simular(S.objs); S.layoutEstado=S.sim.ciegas.length?'Inseguro':(violaciones(S.objs).length?'Borrador':S.layoutEstado); drawEditor(); };
+  $('#b-val').onclick=()=>{ const v=violaciones(S.objs); if(v.length){ S.layoutEstado=v.some(x=>x.r==='RN-02'||x.r==='RN-03')?'Inseguro':'Borrador'; } else { S.sim=simular(S.objs); S.layoutEstado=S.sim.ciegas.length?'Inseguro':'Validado'; } drawEditor(); };
+  $('#b-save').onclick=()=>{ modal(`<h3>Layout guardado</h3><div class="okm">Se guardó la versión en estado ${esc(S.layoutEstado)}.</div><div style="text-align:right"><button class="btn pri" data-close>Aceptar</button></div>`); };
+}
+function refreshSide(){ const keep=CV.drag; drawEditor(); CV.drag=keep; }
+function rotar(){ const o=S.objs.find(o=>o.id===S.sel); if(!o) return; [o.w,o.h]=[o.h,o.w]; S.sim=null; drawEditor(); }
+function borrar(){ S.objs=S.objs.filter(o=>o.id!==S.sel); S.sel=null; S.sim=null; drawEditor(); }
+document.addEventListener('keydown',e=>{ if(!location.hash.startsWith('#editor')) return; if(e.key==='r'||e.key==='R') rotar(); if(e.key==='Delete') borrar(); });
+
+/* =====================================================================
+   Portal de la banda (diseño adaptable)
+   ===================================================================== */
+function shellBanda(on,inner){
+  return `<div class="shell-top"><div class="logo">[ Logotipo ]</div><div class="sp"></div><span class="small mut">Marea Alta ▾</span><button class="btn sm" data-go="login">Salir</button></div>
+  <div class="bshell"><div class="tabs"><a data-go="banda-agenda" class="${on==='ag'?'on':''}">Mi agenda</a><a data-go="banda-bares" class="${on==='bb'?'on':''}">Buscar bares</a><a data-go="banda-perfil" class="${on==='pf'?'on':''}">Mi perfil y rider</a></div>
+  <div style="padding:0 12px">${inner}</div></div>
+  <div class="legal">ⓘ Herramienta de apoyo a la planeación. No sustituye los protocolos de Protección Civil (RNF-G01).</div>`;
+}
+V['banda-agenda']=(p)=>{
+  S.role='banda'; const est=S.convEstado;
+  const card=(tit,fecha,estado,extra='',lugar=D.recinto.nombre)=>`<div class="bcard"><div class="h"><div><b>${tit}</b><div class="small mut">${fecha} · ${lugar}</div></div>${badge(estado)}</div>${extra}</div>`;
+  $('#app').innerHTML=shellBanda('ag',`<h2 class="pt">Mi agenda</h2>
+    <div class="small mut" style="margin:-4px 0 8px">Solo se muestran las convocatorias dirigidas a tu banda.</div>
+    <h4 style="margin:10px 0 6px">${est==='Propuesta'?'Acción requerida':'Respondidas'}</h4>
+    ${card('Noche de rock en vivo','Sáb 31 oct 2026 · 20:00–02:00',est,est==='Propuesta'?`<div class="small" style="margin:6px 0">Responde antes del <b>29 oct 2026</b>.</div><button class="btn pri sm" id="bc-det">Ver detalle y responder</button>`:'')}
+    <h4 style="margin:12px 0 6px">Confirmadas</h4>
+    ${p==='conflicto'?card('Festival Indie del Sur','Sáb 31 oct 2026 · 22:00–03:00','Confirmada','','Bar Sur'):''}${card('Noche indie','Vie 9 oct 2026 · 21:00–02:00','Confirmada')}
+    <h4 style="margin:12px 0 6px">Rechazadas / canceladas</h4>
+    <div class="bcard mut small">Sin convocatorias en este estado.</div>`);
+  const det=(conf)=>modal(`<h3>Noche de rock en vivo</h3><div class="small mut">Sáb 31 oct 2026 · 20:00–02:00 · ${esc(D.recinto.nombre)}</div>
+    <p class="small" style="margin:8px 0">Requerimientos solicitados: backline de guitarras, 2 monitores de piso, escenario de 5 × 3 m.</p>
+    <label class="f"><span>Comentario (opcional)</span><textarea class="inp" rows="2" id="bc-c"></textarea></label>
+    ${conf?`<div class="err" role="alert"><b>No se puede confirmar.</b> Ya tienes confirmado “Festival Indie del Sur” (sáb 31 oct, 22:00–03:00) en un horario traslapado (RN-20).</div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn" data-close>Cancelar</button><button class="btn bad" id="bc-no">Rechazar</button><button class="btn pri" id="bc-si" ${conf?'disabled':''}>Confirmar</button></div>`);
+  const b=$('#bc-det'); if(b) b.onclick=()=>{det(false); wire();};
+  function wire(){ $('#bc-si').onclick=()=>{S.convEstado='Confirmada'; closeModal(); V['banda-agenda']();}; $('#bc-no').onclick=()=>{S.convEstado='Rechazada'; closeModal(); V['banda-agenda']();}; }
+  if(p==='detalle'){det(false); wire();} if(p==='conflicto'){det(true);}
+};
+
+/* ---- CU-16 Buscar bares y solicitar evento */
+V['banda-bares']=(p)=>{
+  S.role='banda';
+  const cat=[
+    {n:'Bar Nocturno Centro', d:'Av. Juárez 120, Col. Centro', z:'Centro', af:150, h:'Jue a sáb · 20:00–03:00', st:'ok'},
+    {n:'Bar Sur', d:'Calz. de Tlalpan 880, Col. Portales', z:'Sur', af:200, h:'Mié a sáb · 19:00–03:00', st:'ocupado'},
+    {n:'Cantina La Esquina', d:'Álvaro Obregón 77, Col. Roma', z:'Centro', af:90, h:'Todos los días · 18:00–00:00', st:'horario'}
+  ];
+  const motivo={ocupado:'Ya existe un evento en ese horario (RN-31)',horario:'El horario está fuera de su operación (RN-31)'};
+  $('#app').innerHTML=shellBanda('bb',`<h2 class="pt">Buscar bares</h2>
+    <div class="small mut" style="margin:-4px 0 8px">Solo aparecen bares aprobados. La disponibilidad se calcula para la fecha y el horario que indiques.</div>
+    <div class="card" style="margin-bottom:10px"><div class="row" style="flex-wrap:wrap;align-items:flex-end">
+      <label class="f col" style="min-width:100px"><span>Nombre o zona</span><input class="inp" value="Centro"></label>
+      <label class="f col" style="min-width:60px;flex:.5"><span>Aforo mín.</span><input class="inp" value="80"></label>
+      <label class="f col" style="min-width:136px"><span>Fecha</span><input class="inp" type="date" value="2026-11-14"></label>
+      <label class="f col" style="min-width:114px"><span>Inicio</span><input class="inp" type="time" value="21:00"></label>
+      <label class="f col" style="min-width:114px"><span>Fin</span><input class="inp" type="time" value="01:00"></label>
+      <label class="f"><button class="btn pri">Buscar</button></label></div></div>
+    ${cat.map(b=>`<div class="bcard"><div class="bcat"><div><b>${b.n}</b> <span class="small mut">· ${b.z}</span><div class="small mut">${b.d} · Aforo seguro ${b.af} · ${b.h}</div>
+      ${b.st!=='ok'?`<div class="small" style="color:var(--warn);margin-top:3px">⚠ ${motivo[b.st]}</div>`:''}</div>
+      <div style="text-align:right;white-space:nowrap">${b.st==='ok'?badge('Disponible'):''}<div style="margin-top:5px"><button class="btn sm ${b.st==='ok'?'pri':''}" ${b.st==='ok'?'data-sol="1"':'disabled'}>Solicitar evento</button></div></div></div></div>`).join('')}
+    <h4 style="margin:14px 0 6px">Mis solicitudes</h4>
+    <table class="t"><tr><th>Bar</th><th>Fecha y horario</th><th>Estado</th><th>Detalle</th></tr>
+      <tr><td>Bar Nocturno Centro</td><td style="white-space:nowrap">14 nov · 21:00–01:00</td><td>${badge('Pendiente')}</td><td><button class="btn sm">Cancelar solicitud</button></td></tr>
+      <tr><td>Bar Nocturno Centro</td><td style="white-space:nowrap">31 oct · 20:00–02:00</td><td>${badge('Aprobada')}</td><td class="small mut">Evento creado; ya aparece en Mi agenda</td></tr>
+      <tr><td>Bar Sur</td><td style="white-space:nowrap">7 nov · 22:00–02:00</td><td>${badge('Rechazada')}</td><td class="small mut">Motivo: fecha reservada para un evento privado</td></tr></table>`);
+  const sol=()=>modal(`<h3>Solicitar evento</h3><div class="small mut">Bar Nocturno Centro · Av. Juárez 120, Col. Centro</div>
+    <div class="row" style="margin-top:8px"><label class="f col"><span>Fecha</span><input class="inp" type="date" value="2026-11-14"></label><label class="f col"><span>Inicio</span><input class="inp" type="time" value="21:00"></label><label class="f col"><span>Fin</span><input class="inp" type="time" value="01:00"></label></div>
+    <label class="f"><span>Mensaje para el administrador</span><textarea class="inp" rows="2">Presentación con repertorio propio de 60 minutos.</textarea></label>
+    <div class="okm">Horario dentro de la operación del bar y sin traslape con otros eventos (RN-31).</div>
+    <div class="small mut">El administrador responderá y recibirás la respuesta por correo.</div>
+    <div style="text-align:right;margin-top:10px"><button class="btn" data-close>Cancelar</button> <button class="btn pri" id="sol-ok">Enviar solicitud</button></div>`);
+  document.querySelectorAll('[data-sol]').forEach(b=>b.onclick=()=>{ sol(); $('#sol-ok').onclick=()=>closeModal(); });
+  if(p==='solicitar') sol();
+};
+V['banda-perfil']=()=>{
+  S.role='banda';
+  $('#app').innerHTML=shellBanda('pf',`<h2 class="pt">Mi perfil y rider técnico</h2>
+    <div class="row"><div class="col card"><h4>Datos artísticos y de contacto</h4>
+      <label class="f"><span>Nombre artístico</span><input class="inp" value="Marea Alta"></label>
+      <div class="row"><label class="f col"><span>Integrantes</span><input class="inp" value="4"></label><label class="f col"><span>Género</span><input class="inp" value="Rock alternativo"></label></div>
+      <label class="f"><span>Correo de contacto</span><input class="inp" value="mareaalta@correo.com"></label>
+      <label class="f"><span>Redes sociales</span><input class="inp" value="@mareaalta"></label>
+      <label class="f"><span>Tarifa y notas internas</span><input class="inp" value="Administrado por el recinto" disabled></label>
+      <div style="text-align:right"><button class="btn pri">Guardar cambios</button></div></div>
+    <div class="col card"><h4>Rider técnico (PDF)</h4>
+      <div class="okm" style="margin-top:0">Vigente: <b>rider_v3.pdf</b> · cargado el 12 oct 2026</div>
+      <table class="t"><tr><th>Versión</th><th>Fecha</th><th>Estado</th></tr><tr><td>v3</td><td>12 oct</td><td>${badge('Activa').replace('Activa','Vigente')}</td></tr><tr><td>v2</td><td>2 sep</td><td>Histórico</td></tr><tr><td>v1</td><td>15 ago</td><td>Histórico</td></tr></table>
+      <div style="margin-top:10px"><button class="btn" id="up">Subir nueva versión…</button></div><div class="small mut" style="margin-top:6px">Solo PDF; tamaño máximo definido (RNF-C05).</div><div id="up-m"></div></div></div>`);
+  $('#up').onclick=()=>{ $('#up-m').innerHTML=`<div class="err" role="alert">Archivo rechazado: solo se permiten PDF dentro del tamaño máximo.</div>`; };
+};
+
+/* =====================================================================
+   Router y eventos globales
+   ===================================================================== */
+function route(){
+  const h=(location.hash||'#login').slice(1); const [name,...rest]=h.split('/'); const key=name==='editor'?'editor':name;
+  closeModal(); (V[key]||V.login)(rest.join('/'));
+}
+window.addEventListener('hashchange',route);
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]'); if(g){ e.preventDefault(); const r=g.dataset.go; if(location.hash==='#'+r) route(); else go(r); return; }
+  if(e.target.closest('[data-close]')||e.target.id==='mbg') closeModal();
+});
+if(/[?&]shot=1/.test(location.search)) document.body.classList.add('shot');
+route();
+</script>
+</body>
+</html>
